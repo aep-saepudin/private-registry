@@ -1,0 +1,29 @@
+services:
+  registry:
+    image: registry:2
+    restart: always
+    ports:
+      - "4443:4443"
+    environment:
+      REGISTRY_HTTP_SECRET: "your-random-secret-key"
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+      REGISTRY_HTTP_ADDR: 0.0.0.0:4443
+      REGISTRY_HTTP_TLS_CERTIFICATE: /etc/ssl/fullchain.pem
+      REGISTRY_HTTP_TLS_KEY: /etc/ssl/privkey.pem
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: "Registry Realm"
+    volumes:
+      - ./certs/fullchain.pem:/etc/ssl/fullchain.pem:ro
+      - ./certs/privkey.pem:/etc/ssl/privkey.pem:ro
+      - ./auth:/auth
+      - registry-data-app:/var/lib/registry
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://localhost:4443/v2/_catalog"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  registry-data-app:
